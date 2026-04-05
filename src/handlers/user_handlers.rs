@@ -4,6 +4,8 @@ use actix_web::web;
 use sqlx::PgPool;
 use bcrypt::{hash, verify};
 use crate::auth::jwt::{create_token, verify_token};
+use crate::ratelimiter;
+use crate::ratelimiter::limiter::RateLimiter;
 
 
 #[derive(Deserialize)]
@@ -75,7 +77,22 @@ pub async fn login(
     
 }
 
-pub async fn protected_route(req: HttpRequest) -> impl Responder {
+pub async fn protected_route(
+    req: HttpRequest,
+    limiter: web::Data<RateLimiter>,
+) -> impl Responder {
+
+    // 🔹 Rate limit pehle check karo
+    let ip = req
+        .peer_addr()
+        .map(|addr| addr.ip().to_string())
+        .unwrap_or("unknown".to_string());
+
+    if !limiter.check(ip) {
+        return HttpResponse::TooManyRequests().body("Rate limit exceeded");
+    }
+
+    // 🔹 Token check
     let auth_header = req.headers().get("Authorization");
 
     let token = match auth_header {
