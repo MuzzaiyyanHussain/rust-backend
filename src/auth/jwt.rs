@@ -1,4 +1,5 @@
 use serde::{Serialize, Deserialize};
+use jsonwebtoken::{decode, DecodingKey, Validation};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -19,4 +20,17 @@ pub fn create_token(email: &str) -> String {
         &claims,
         &EncodingKey::from_secret("secret".as_ref()),
     ).unwrap()
+}
+
+pub fn verify_token(token: &str) -> Option<Claims> {
+    let result = decode::<Claims>(
+        token,
+        &DecodingKey::from_secret("secret".as_ref()),
+        &Validation::default(),
+    );
+
+    match result {
+        Ok(data) => Some(data.claims),
+        Err(_) => None,
+    }
 }

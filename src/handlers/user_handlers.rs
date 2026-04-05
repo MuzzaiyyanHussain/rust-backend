@@ -1,9 +1,9 @@
-use actix_web::{HttpResponse, Responder};
+use actix_web::{HttpResponse, Responder, HttpRequest};
 use serde::Deserialize;
 use actix_web::web;
 use sqlx::PgPool;
 use bcrypt::{hash, verify};
-use crate::auth::jwt::create_token;
+use crate::auth::jwt::{create_token, verify_token};
 
 
 #[derive(Deserialize)]
@@ -73,4 +73,23 @@ pub async fn login(
         HttpResponse::Unauthorized().body("Invalid password")
     }
     
+}
+
+pub async fn protected_route(req: HttpRequest) -> impl Responder {
+    let auth_header = req.headers().get("Authorization");
+
+    let token = match auth_header {
+        Some(header) => {
+            let auth_str = header.to_str().unwrap_or("");
+            auth_str.replace("Bearer ", "")
+        }
+        None => return HttpResponse::Unauthorized().body("No token"),
+    };
+
+    let claims = match verify_token(&token) {
+        Some(c) => c,
+        None => return HttpResponse::Unauthorized().body("Invalid token"),
+    };
+
+    HttpResponse::Ok().body(format!("Welcome {}", claims.sub))
 }
