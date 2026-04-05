@@ -89,7 +89,6 @@ pub async fn protected_route(
         return HttpResponse::TooManyRequests().body("Rate limit exceeded");
     }
 
-    // 🔹 Token check
     let auth_header = req.headers().get("Authorization");
 
     let token = match auth_header {

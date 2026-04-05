@@ -1,13 +1,12 @@
 use serde::{Serialize, Deserialize};
 use jsonwebtoken::{decode, DecodingKey, Validation};
+use jsonwebtoken::{encode, Header, EncodingKey};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub sub: String, 
     pub exp: usize,
 }
-
-use jsonwebtoken::{encode, Header, EncodingKey};
 
 pub fn create_token(email: &str) -> String {
     let claims = Claims {
