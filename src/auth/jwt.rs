@@ -1,0 +1,22 @@
+use serde::{Serialize, Deserialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Claims {
+    pub sub: String, 
+    pub exp: usize,
+}
+
+use jsonwebtoken::{encode, Header, EncodingKey};
+
+pub fn create_token(email: &str) -> String {
+    let claims = Claims {
+        sub: email.to_string(),
+        exp: 2000000000, 
+    };
+
+    encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret("secret".as_ref()),
+    ).unwrap()
+}
